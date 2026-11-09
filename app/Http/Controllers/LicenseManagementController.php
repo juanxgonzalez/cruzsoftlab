@@ -2,23 +2,57 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\SoftwareLicense;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
 
 class LicenseManagementController extends Controller
 {
+    /**
+     * Normaliza slugs con errores comunes de captura (ej. sistemaacademicoubib -> sistemaacademicounib).
+     */
+    private function normalizeSlug(string $slug): string
+    {
+        $slugLimpio = strtolower(trim((string) preg_replace('/\.json$/i', '', $slug)));
+
+        if ($slugLimpio === 'sistemaacademicoubib') {
+            return 'sistemaacademicounib';
+        }
+
+        return $slugLimpio;
+    }
+
+    /**
+     * Notifica al sistema cliente remoto para limpiar su caché de licencia de inmediato.
+     */
+    private function notifyClientWebhook(SoftwareLicense $license): void
+    {
+        if (empty($license->system_url)) {
+            return;
+        }
+
+        try {
+            $baseUrl = rtrim($license->system_url, '/');
+            Http::timeout(3)->get("{$baseUrl}/licencia/webhook-sync");
+        } catch (\Throwable $e) {
+            // Silencioso si el cliente no responde en ese instante
+        }
+    }
+
     /**
      * Endpoint público que consulta el software cliente (ej. sistemaacademicounib).
      * URL: /licenses/{slug}.json
      */
     public function serveJson(string $slug)
     {
-        $slugLimpio = preg_replace('/\.json$/i', '', $slug);
+        $slugLimpio = $this->normalizeSlug($slug);
 
-        $license = SoftwareLicense::where('system_slug', $slugLimpio)->first();
+        $license = SoftwareLicense::where('system_slug', $slugLimpio)
+            ->orWhere('system_slug', 'sistemaacademicoubib')
+            ->first();
 
-        if (!$license) {
+        if (! $license) {
             return response()->json([
                 'error' => 'Licencia de software no encontrada',
                 'sistema' => $slugLimpio,
@@ -129,8 +163,10 @@ class LicenseManagementController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        $validated['system_slug'] = $this->normalizeSlug($validated['system_slug']);
+
         try {
-            if (!empty($validated['id'])) {
+            if (! empty($validated['id'])) {
                 $license = SoftwareLicense::findOrFail($validated['id']);
                 $license->update($validated);
             } else {
@@ -144,6 +180,8 @@ class LicenseManagementController extends Controller
                 }
             }
 
+            $this->notifyClientWebhook($license);
+
             return response()->json([
                 'success' => true,
                 'license' => $license,
@@ -152,7 +190,7 @@ class LicenseManagementController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al guardar la licencia: ' . $e->getMessage(),
+                'message' => 'Error al guardar la licencia: '.$e->getMessage(),
             ], 422);
         }
     }
@@ -163,13 +201,14 @@ class LicenseManagementController extends Controller
     public function toggleBlocked($id)
     {
         $license = SoftwareLicense::findOrFail($id);
-        $license->update(['blocked' => !$license->blocked]);
+        $license->update(['blocked' => ! $license->blocked]);
+        $this->notifyClientWebhook($license);
 
         return response()->json([
             'success' => true,
             'blocked' => $license->blocked,
-            'message' => $license->blocked 
-                ? "El software {$license->client_name} ha sido SUSPENDIDO." 
+            'message' => $license->blocked
+                ? "El software {$license->client_name} ha sido SUSPENDIDO."
                 : "El software {$license->client_name} ha sido REACTIVADO con éxito.",
         ]);
     }
@@ -192,11 +231,12 @@ class LicenseManagementController extends Controller
             'cutoff_date' => $nuevaFecha,
             'blocked' => false,
         ]);
+        $this->notifyClientWebhook($license);
 
         return response()->json([
             'success' => true,
             'cutoff_date' => $nuevaFecha->format('Y-m-d'),
-            'message' => "Se han extendido {$dias} días de servicio hasta el " . $nuevaFecha->format('d/m/Y') . ".",
+            'message' => "Se han extendido {$dias} días de servicio hasta el ".$nuevaFecha->format('d/m/Y').'.',
         ]);
     }
 
@@ -214,4 +254,3 @@ class LicenseManagementController extends Controller
         ]);
     }
 }
-
