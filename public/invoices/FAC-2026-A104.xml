@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Serie="A" Folio="104" Fecha="2026-08-28T14:35:20" Sello="SAT_SELLO_DIGITAL_DEMO" FormaPago="03" SubTotal="29400.00" Moneda="MXN" Total="34104.00" TipoDeComprobante="I" MetodoPago="PUE" LugarExpedicion="88620">
+    <cfdi:Emisor Rfc="CUGJ860512AB3" Nombre="JUAN JOSE CRUZ GONZALEZ - JJ CRUZ SOFTWARE LAB" RegimenFiscal="612"/>
+    <cfdi:Receptor Rfc="UIB980312KP4" Nombre="UNIVERSIDAD INTERAMERICANA DEL BRAVO A.C." DomicilioFiscalReceptor="88620" RegimenFiscalReceptor="603" UsoCFDI="G03"/>
+    <cfdi:Conceptos>
+        <cfdi:Concepto ClaveProdServ="81111508" Cantidad="1" ClaveUnidad="E48" Descripcion="Anticipo del 40% - Arranque de Desarrollo Sistema Cafeteria Escolar Prepago QR" ValorUnitario="29400.00" Importe="29400.00">
+            <cfdi:Impuestos>
+                <cfdi:Traslados>
+                    <cfdi:Traslado Base="29400.00" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="4704.00"/>
+                </cfdi:Traslados>
+            </cfdi:Impuestos>
+        </cfdi:Concepto>
+    </cfdi:Conceptos>
+    <cfdi:Impuestos TotalImpuestosTrasladados="4704.00">
+        <cfdi:Traslados>
+            <cfdi:Traslado Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="4704.00"/>
+        </cfdi:Traslados>
+    </cfdi:Impuestos>
+</cfdi:Comprobante>
