@@ -2489,11 +2489,11 @@ export default function LandingPage() {
                                   </button>
                                 </div>
 
-                                {lic.system_url && (
+                                {lic.system_url && /^https?:\/\//i.test(lic.system_url) && (
                                   <a
                                     href={lic.system_url}
                                     target="_blank"
-                                    rel="noreferrer"
+                                    rel="noopener noreferrer"
                                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-400 text-[11px] transition-colors"
                                   >
                                     <Laptop className="w-3 h-3" />

@@ -149,19 +149,25 @@ class LicenseManagementController extends Controller
         $validated = $request->validate([
             'id' => 'nullable|integer|exists:software_licenses,id',
             'client_name' => 'required|string|max:255',
-            'system_slug' => 'required|string|max:100',
-            'system_url' => 'nullable|string|max:255',
+            'system_slug' => 'required|string|max:100|regex:/^[a-zA-Z0-9_\-\.]+$/',
+            'system_url' => 'nullable|url:http,https|max:255',
             'active' => 'boolean',
             'blocked' => 'boolean',
             'cutoff_date' => 'nullable|date',
             'grace_days' => 'integer|min:0|max:60',
             'monthly_amount' => 'numeric|min:0',
             'extension_code' => 'nullable|string|max:50',
-            'alert_message' => 'nullable|string',
+            'alert_message' => 'nullable|string|max:2000',
             'contact_whatsapp' => 'nullable|string|max:30',
             'contact_email' => 'nullable|email|max:100',
-            'notes' => 'nullable|string',
+            'notes' => 'nullable|string|max:2000',
         ]);
+
+        foreach (['client_name', 'extension_code', 'alert_message', 'contact_whatsapp', 'notes'] as $field) {
+            if (isset($validated[$field]) && is_string($validated[$field])) {
+                $validated[$field] = trim(strip_tags($validated[$field]));
+            }
+        }
 
         $validated['system_slug'] = $this->normalizeSlug($validated['system_slug']);
 

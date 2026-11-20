@@ -21,11 +21,11 @@ class ProposalController extends Controller
         ]);
 
         $proposal = Proposal::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'project_type' => $validated['project_type'],
-            'budget' => $validated['budget'] ?? 'Por definir',
-            'message' => $validated['message'],
+            'name' => trim(strip_tags($validated['name'])),
+            'email' => trim(strip_tags($validated['email'])),
+            'project_type' => trim(strip_tags($validated['project_type'])),
+            'budget' => isset($validated['budget']) ? trim(strip_tags($validated['budget'])) : 'Por definir',
+            'message' => trim(strip_tags($validated['message'])),
             'status' => 'pendiente',
         ]);
 
@@ -51,8 +51,8 @@ class ProposalController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('project_type', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('project_type', 'like', "%{$search}%");
             });
         }
 
